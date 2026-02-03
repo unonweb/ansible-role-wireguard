@@ -6,15 +6,4 @@ wireguard_client_key_private:
 wireguard_client_ip:
 wireguard_network_manager_connection_name: wireguard
 wireguard_network_manager_dns_ip:
-
-wireguard:
-  server:
-    pub_key:
-    endpoint:
-    allowed_ips:
-  client:
-    private_key:
-    ip:
-  network_manager:
-    connection_name: wireguard
-    dns_ip:
+wireguard_restart_daemons: true
