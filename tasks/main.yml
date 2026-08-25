@@ -1,7 +1,6 @@
 ---
 - name: Wireguard role
-  tags:
-  - wireguard
+  tags: [wireguard]
   block:
 
   # install
@@ -13,68 +12,8 @@
       - openresolv
       state: present
       
-  #- name: Check if {{ connection_name }}.nmconnection exists
-  #  ansible.builtin.stat:
-  #    path: "/etc/NetworkManager/system-connections/{{ connection_name }}.nmconnection"
-  #  register: nmconnection
-  
-  # Create NetworkManager connection
-  - name: Setup NetworkManager connection for wireguard 
-    block:
-
-    - name: Check required vars for wireguard
-      ansible.builtin.assert:
-        that:
-        - wireguard_network_manager_connection_name != None
-        - wireguard_client_ip != None
-        - wireguard_network_manager_dns_ip != None
-        - wireguard_server_allowed_ips != None
-        - wireguard_server_endpoint != None
-        - wireguard_server_key_public != None
-
-    # create connection
-    # we need to use the nmcli tool to get a UUID for the connection
-    # not idempotent!
-    - name: Create a NetworkManager connection for wireguard
-      become: true
-      notify: Restart NetworkManager
-      community.general.nmcli:
-        type: wireguard
-        conn_name: "{{ wireguard_network_manager_connection_name }}"
-        ifname: "{{ wireguard_network_manager_connection_name }}"
-        autoconnect: false
-        state: present
-        ip4: "{{ wireguard_client_ip }}"
-        dns4: "{{ wireguard_network_manager_dns_ip }}"
-        dns4_search: "~"
-        method6: disabled
-        wireguard:
-            private-key: "{{ wireguard_client_key_private }}"
-
-    # remove existing wireguard peer section
-    - name: Remove existing peers entry
-      tags: regex
-      become: true
-      ansible.builtin.replace:
-        path: "/etc/NetworkManager/system-connections/{{ wireguard_network_manager_connection_name }}.nmconnection"
-        regexp: '\[wireguard-peer[\s\S]*?0\.0\.0\.0\/0;'
-        replace: ""
-
-    # insert wireguard section
-    - name: Insert block into {{ wireguard_network_manager_connection_name }}.nmconnection # not idempotent!
-      become: true
-      notify: Restart NetworkManager
-      ansible.builtin.blockinfile:
-        path: "/etc/NetworkManager/system-connections/{{ wireguard_network_manager_connection_name }}.nmconnection"
-        group: root
-        owner: root
-        mode: u=rw,g=,o=
-        append_newline: true
-        prepend_newline: true
-        block: |
-          [wireguard-peer.{{ wireguard_server_key_public }}]
-          endpoint={{ wireguard_server_endpoint }}
-          allowed-ips={{ wireguard_server_allowed_ips }}
+  # network manager
+  - ansible.builtin.import_tasks: network_manager.yml
   
   # DNS
   - name: DNS für VPN
