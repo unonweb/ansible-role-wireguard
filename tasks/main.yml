@@ -13,7 +13,7 @@
       state: present
       
   # network manager
-  - ansible.builtin.import_tasks: network_manager.yml
+  - ansible.builtin.import_tasks: wireguard-network-manager.yml
   
   # DNS
   - name: DNS für VPN
